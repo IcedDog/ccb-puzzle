@@ -16,11 +16,26 @@ let gameState = {
     initBank: ''
 };
 
+window.urlParamsLoaded = false;
+
 // 初始化
 function init() {
     loadSettings();
     updateCharacterGrid();
     setupInputValidation();
+    if (!window.urlParamsLoaded) detectUrlParams();
+}
+
+function detectUrlParams() {
+    window.urlParamsLoaded = true;
+    const urlParams = new URLSearchParams(window.location.search);
+    const target = urlParams.get('target');
+    const bank = urlParams.get('bank');
+    document.getElementById('initialChars').value = bank ? bank : '';
+    document.getElementById('targetWord').value = target? target : '';
+    if (bank !== '' && targetWord !== '' && gameState.apiKey !== '') {
+        startGame();
+    }
 }
 
 function isChinese(char) {
@@ -319,7 +334,7 @@ function addResponseToBank(response) {
         }
         if (!isPunctuation(char)) {
             gameState.characterBank.add(char);
-            gameState.lastAddedChars.add(char);
+            if (!gameState.characterBank.has(char)) gameState.lastAddedChars.add(char);
         }
     }
 }
@@ -355,6 +370,9 @@ function resetGame() {
     gameState.characterBank = new Set();
     gameState.targetWord = '';
     gameState.chatHistory = [];
+
+    closeSuccessModal();
+    document.getElementById("chatCount").textContent = 0;
 
     document.getElementById('gameSetup').style.display = 'block';
     document.getElementById('gameArea').classList.remove('active');
@@ -496,11 +514,11 @@ function shareResult() {
     const minutes = Math.floor(timeDiff / 60);
     const seconds = timeDiff % 60;
 
-    const shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！
-用时：${minutes}分${seconds}秒
-对话次数：${moves}
-初始字库：${gameState.initBank}
-#词出变 #文字游戏`;
+    const shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！🥰
+⏰ 用时：${minutes} 分 ${seconds} 秒
+💬 对话次数：${moves}
+🧐 初始字库：${gameState.initBank}
+尝试一下 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle?target=${gameState.targetWord}&bank=${gameState.initBank}`);
 
     navigator.clipboard.writeText(shareText).then(() => {
         showToast('游戏记录已复制到剪贴板', '#2ecc71');
@@ -664,6 +682,11 @@ async function refreshLatestChat() {
     gameState.chatHistory.pop();
     const chatContainer = document.getElementById('chatContainer');
     chatContainer.removeChild(chatContainer.lastChild);
+
+    // Remove the last AI respoense from character bank
+    for (let item in gameState.lastAddedChars) {
+        gameState.characterBank.delete(item);
+    }
 
     // Show loading message
     showLoadingMessage();
