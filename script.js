@@ -2,6 +2,7 @@
 let gameState = {
     isGameActive: false,
     characterBank: new Set(),
+    lastAddedChars: new Set(),
     targetWord: '',
     disableEnglish: true,
     apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
@@ -9,7 +10,10 @@ let gameState = {
     modelName: 'deepseek-ai/DeepSeek-V3',
     modelTemperature: 0.7,
     initPrompt: '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。',
-    chatHistory: []
+    chatHistory: [],
+    startTime: null,
+    theme: 'light',
+    initBank: ''
 };
 
 // 初始化
@@ -26,7 +30,7 @@ function isChinese(char) {
 }
 
 function isPunctuation(char) {
-    const punctuationRegex = /[\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~。、！？：；“”‘’（）《》【】｛｝～—…·]/;
+    const punctuationRegex = /[ \u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~。、！？：；“”‘’（）《》【】｛｝～—…·]/;
     return punctuationRegex.test(char);
 }
 
@@ -75,13 +79,18 @@ function startGame() {
     gameState.isGameActive = true;
     gameState.targetWord = targetWord;
     gameState.characterBank = new Set();
+    gameState.startTime = new Date();
+    gameState.initBank = '';
 
     // 添加初始字符到字库
     for (let char of initialChars) {
         if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
             continue;
         }
-        if (!isPunctuation(char)) gameState.characterBank.add(char);
+        if (!isPunctuation(char)) {
+            gameState.characterBank.add(char);
+            gameState.initBank += char;
+        }
     }
 
     // 更新界面
@@ -257,6 +266,7 @@ async function submitQuestion() {
         // 检查是否达成目标
         if (checkWinCondition(response)) {
             showSuccess();
+            showSuccessModal();
         }
 
         // 清空输入
@@ -302,11 +312,15 @@ async function callAI(question) {
 
 // 将回复添加到字库
 function addResponseToBank(response) {
+    gameState.lastAddedChars = new Set();
     for (let char of response) {
         if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
             continue;
         }
-        if (!isPunctuation(char)) gameState.characterBank.add(char);
+        if (!isPunctuation(char)) {
+            gameState.characterBank.add(char);
+            gameState.lastAddedChars.add(char);
+        }
     }
 }
 
@@ -318,9 +332,14 @@ function checkWinCondition(response) {
 // 显示成功消息
 function showSuccess() {
     const gameArea = document.getElementById('gameArea');
+    // try delete success message if it exists
+    const tryFindSuccessMsg = gameArea.querySelector('.success-message');
+    if (tryFindSuccessMsg) {
+        tryFindSuccessMsg.remove();
+    }
     const successMsg = document.createElement('div');
     successMsg.className = 'success-message';
-    successMsg.innerHTML = `🎉 恭喜！成功挑战完成！<br>AI回复中包含了目标词"${gameState.targetWord}"`;
+    successMsg.innerHTML = `🎉 恭喜！成功挑战完成！<br>AI 回复中包含了目标词"${gameState.targetWord}"`;
     gameArea.insertBefore(successMsg, gameArea.firstChild);
 
     spawnConfetti(3000);
@@ -415,6 +434,79 @@ function loadSettings() {
             document.getElementById('modelTemperatureValue').textContent = this.value;
         });
     }
+
+    initTheme();
+}
+
+// 切换主题
+function toggleTheme() {
+    gameState.theme = gameState.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', gameState.theme);
+    localStorage.setItem('theme', gameState.theme);
+
+    // Force re-render of inputs to update their styles
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.style.display = 'none';
+        setTimeout(() => input.style.display = '', 0);
+    });
+}
+
+// 初始化主题
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    gameState.theme = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+// 显示成功模态框
+function showSuccessModal() {
+    const endTime = new Date();
+    const timeDiff = Math.floor((endTime - gameState.startTime) / 1000);
+    const minutes = Math.floor(timeDiff / 60);
+    const seconds = timeDiff % 60;
+
+    document.getElementById('successTarget').textContent = gameState.targetWord;
+    document.getElementById('successTime').textContent = `${minutes}分${seconds}秒`;
+    document.getElementById('successMoves').textContent = gameState.chatHistory.length / 2;
+
+    const overlay = document.getElementById('overlay');
+    const modal = document.getElementById('successModal');
+    overlay.classList.add('show');
+    modal.classList.remove('hiding');
+    modal.style.display = 'block';
+}
+
+function closeSuccessModal() {
+    const overlay = document.getElementById('overlay');
+    const modal = document.getElementById('successModal');
+
+    modal.classList.add('hiding');
+    setTimeout(() => {
+        overlay.classList.remove('show');
+        modal.style.display = 'none';
+        modal.classList.remove('hiding');
+    }, 300);
+}
+
+// 分享结果
+function shareResult() {
+    const moves = gameState.chatHistory.length / 2;
+    const timeDiff = Math.floor((new Date() - gameState.startTime) / 1000);
+    const minutes = Math.floor(timeDiff / 60);
+    const seconds = timeDiff % 60;
+
+    const shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！
+用时：${minutes}分${seconds}秒
+对话次数：${moves}
+初始字库：${gameState.initBank}
+#词出变 #文字游戏`;
+
+    navigator.clipboard.writeText(shareText).then(() => {
+        showToast('游戏记录已复制到剪贴板', '#2ecc71');
+    }).catch(err => {
+        showToast('复制失败: ' + err, '#e74c3c');
+    });
 }
 
 // 键盘事件
@@ -454,6 +546,18 @@ function pasteBank() {
     }).catch(err => {
         showToast('粘贴失败: ' + err, '#e74c3c');
     });
+}
+
+function exportChat() {
+    const chatHistory = gameState.chatHistory.map(chat => {
+        const timestamp = new Date(chat.timestamp).toLocaleString();
+        return `${chat.isUser ? '我' : 'AI'}: ${chat.content} (${timestamp})`;
+    }).join('\n');
+    const file = new File([chatHistory], 'chat.txt', { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = 'chat.txt';
+    a.click();
 }
 
 function showToast(str, color) {
@@ -519,4 +623,72 @@ function spawnConfetti(timeout = 2000) {
 }
 
 // 初始化
-init();
+window.addEventListener('load', () => {
+    init();
+    initTheme();
+});
+
+// Add close modal on background click
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            if (modal.id === 'successModal') {
+                closeSuccessModal();
+            } else {
+                closeSettings();
+            }
+        }
+    });
+});
+
+// Close modals on overlay click
+document.getElementById('overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('overlay')) {
+        closeSuccessModal();
+    }
+});
+
+async function refreshLatestChat() {
+    if (gameState.chatHistory.length === 0) {
+        showToast('没有可刷新的对话', '#e74c3c');
+        return;
+    }
+
+    const lastUserMessage = gameState.chatHistory[gameState.chatHistory.length - 2];
+    if (!lastUserMessage || !lastUserMessage.isUser) {
+        showToast('没有找到上一条提问', '#e74c3c');
+        return;
+    }
+
+    // Remove the last AI response from chat history
+    gameState.chatHistory.pop();
+    const chatContainer = document.getElementById('chatContainer');
+    chatContainer.removeChild(chatContainer.lastChild);
+
+    // Show loading message
+    showLoadingMessage();
+
+    try {
+        const response = await callAI(lastUserMessage.content);
+        removeLoadingMessage();
+        addChatMessage(response, false);
+
+        // Add new characters to bank
+        addResponseToBank(response);
+        updateCharacterGrid();
+
+        // Check win condition
+        if (checkWinCondition(response)) {
+            showSuccess();
+            showSuccessModal();
+        }
+
+        showToast('刷新成功', '#2ecc71');
+    } catch (error) {
+        removeLoadingMessage();
+        showToast('刷新失败：' + error.message, '#e74c3c');
+        
+        // Restore the previous AI response
+        addChatMessage(gameState.chatHistory[gameState.chatHistory.length - 1].content, false);
+    }
+}

@@ -30,12 +30,13 @@
                 <div class="setup-row">
                     <button class="btn" onclick="startGame()">开始游戏</button>
                     <button class="btn btn-settings" onclick="openSettings()">设置</button>
+                    <button class="btn btn-theme" onclick="toggleTheme()">切换主题</button>
                 </div>
             </div>
 
             <div class="game-area" id="gameArea">
                 <div class="game-status" id="gameStatus">
-                    目标词：<span id="currentTarget"></span>
+                    <div class="target-badge">目标词：<span id="currentTarget"></span></div>
                 </div>
 
                 <div class="character-bank">
@@ -58,7 +59,11 @@
                 </div>
 
                 <div class="chat-history">
-                    <h3>聊天记录 (<span id="chatCount">0</span> 次对话)</h3>
+                    <h3>
+                        聊天记录 (<span id="chatCount">0</span> 次对话)
+                        <button class="character-bank-btn" onclick="exportChat()">导出聊天</button>
+                        <button class="refresh-btn" onclick="refreshLatestChat()" title="刷新上一条对话"></button>
+                    </h3>
                     <div class="chat-container" id="chatContainer">
                         <div class="chat-placeholder">开始提问来查看聊天记录...</div>
                     </div>
@@ -122,7 +127,7 @@
                         <li>2. 注册账号并完成实名认证</li>
                         <li>3. 在控制台中创建 API 密钥</li>
                         <li>4. 选择合适的模型（推荐：<code>deepseek-ai/DeepSeek-V3</code>）</li>
-                        <li>5. 购买足够的 token 用量（1 元就能用很久）</li>
+                        <li>5. 购买足够的 token 用量（注册会赠送）</li>
                         <li>6. 将 API 密钥填入上方设置中</li>
                     </ul>
                 </div>
@@ -133,11 +138,33 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="toast">Some text some message..</div>
+    <div id="overlay">
+        <!-- Success Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content">
+                <h2>🎉 挑战成功！</h2>
+                <div id="successModalDescription" class="success-details">
+                    <p>目标词：<span id="successTarget"></span></p>
+                    <p>用时：<span id="successTime"></span></p>
+                    <p>对话次数：<span id="successMoves"></span></p>
+                </div>
+                <div class="share-area">
+                    <button class="btn" onclick="shareResult()">分享结果</button>
+                    <div class="share-text" id="shareText"></div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn" onclick="resetGame()">再玩一次</button>
+                    <button class="btn btn-secondary" onclick="closeSuccessModal()">关闭</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="js-container"></div>
+
+    <div id="toast">Some text some message..</div>
 
     <script src="script.js"></script>
 </body>
