@@ -21,7 +21,7 @@ function init() {
 
 function isChinese(char) {
     const chineseRegex = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\U00020000-U0002EBEF]/;
-    const numberRegex = /[\d\uFF10-\uFF19\u00BC-\u00BE\u2150-\u215E\u00B2-\u00B3\u2070-\u2079\u00B9\u00B0\u00A3\u20A0-\u20CF]/;
+    const numberRegex = /[\d\uFF10-\uFF19\u00BC-\u00BE\u2150-\u215E\u00B2-\u00B3\u2070-\u2079\u00B9\u00B0\u00A3\u20A0-\u20CF\w]/;
     return chineseRegex.test(char) && !numberRegex.test(char);
 }
 
