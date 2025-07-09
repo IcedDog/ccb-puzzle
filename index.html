@@ -40,7 +40,7 @@
 
                 <div class="character-bank">
                     <h3>
-                        可用字库 (<span id="charCount">0</span>个字符)
+                        可用字库 (<span id="charCount">0</span> 个字符)
                         <button class="character-bank-btn" onclick="copyBank()">复制字库</button>
                         <button class="character-bank-btn" onclick="pasteBank()">粘贴字库</button>
                     </h3>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="chat-history">
-                    <h3>聊天记录：</h3>
+                    <h3>聊天记录 (<span id="chatCount">0</span> 次对话)</h3>
                     <div class="chat-container" id="chatContainer">
                         <div class="chat-placeholder">开始提问来查看聊天记录...</div>
                     </div>
@@ -83,13 +83,13 @@
                 </div>
 
                 <div class="settings-item">
-                    <label for="apiUrl">API地址：</label>
+                    <label for="apiUrl">API 地址：</label>
                     <input type="text" id="apiUrl" placeholder="https://api.siliconflow.cn/v1/chat/completions"
                         value="https://api.siliconflow.cn/v1/chat/completions">
                 </div>
 
                 <div class="settings-item">
-                    <label for="apiKey">API密钥：</label>
+                    <label for="apiKey">API 密钥：</label>
                     <input type="password" id="apiKey" placeholder="sk-...">
                 </div>
 
@@ -100,22 +100,30 @@
                 </div>
 
                 <div class="settings-item">
-                    <label for="initPrompt">AI提示词：</label>
+                    <label for="modelName">模型温度：</label>
+                    <div class="slider-item">
+                        <input type="range" id="modelTemperature" min="0.1" max="1.0" step="0.1" value="0.7">
+                        <div class="slider-value" id="modelTemperatureValue">0.7</div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label for="initPrompt">AI 提示词：</label>
                     <input type="text" id="initPrompt"
                         placeholder="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。"
                         value="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。">
                 </div>
 
                 <div class="guide">
-                    <h4>硅基流动API使用指南</h4>
+                    <h4>快速获取 API</h4>
                     <ul>
                         <li>1. 访问 <a href="https://cloud.siliconflow.cn"
                                 target="_blank">https://cloud.siliconflow.cn</a></li>
-                        <li>2. 注册账号并完成身份验证</li>
-                        <li>3. 在控制台中创建API密钥</li>
-                        <li>4. 选择合适的模型（推荐：deepseek-ai/DeepSeek-V3）</li>
-                        <li>5. 购买足够的token用量</li>
-                        <li>6. 将API密钥填入上方设置中</li>
+                        <li>2. 注册账号并完成实名认证</li>
+                        <li>3. 在控制台中创建 API 密钥</li>
+                        <li>4. 选择合适的模型（推荐：<code>deepseek-ai/DeepSeek-V3</code>）</li>
+                        <li>5. 购买足够的 token 用量（1 元就能用很久）</li>
+                        <li>6. 将 API 密钥填入上方设置中</li>
                     </ul>
                 </div>
 

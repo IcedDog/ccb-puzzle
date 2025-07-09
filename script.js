@@ -7,6 +7,7 @@ let gameState = {
     apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
     apiKey: '',
     modelName: 'deepseek-ai/DeepSeek-V3',
+    modelTemperature: 0.7,
     initPrompt: '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。',
     chatHistory: []
 };
@@ -20,8 +21,13 @@ function init() {
 
 function isChinese(char) {
     const chineseRegex = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\U00020000-U0002EBEF]/;
+    const numberRegex = /[\d\uFF10-\uFF19\u00BC-\u00BE\u2150-\u215E\u00B2-\u00B3\u2070-\u2079\u00B9\u00B0\u00A3\u20A0-\u20CF]/;
+    return chineseRegex.test(char) && !numberRegex.test(char);
+}
+
+function isPunctuation(char) {
     const punctuationRegex = /[\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~。、！？：；“”‘’（）《》【】｛｝～—…·]/;
-    return chineseRegex.test(char) || punctuationRegex.test(char);
+    return punctuationRegex.test(char);
 }
 
 // 设置输入验证
@@ -72,10 +78,10 @@ function startGame() {
 
     // 添加初始字符到字库
     for (let char of initialChars) {
-        if (gameState.disableEnglish && !isChinese(char)) {
+        if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
             continue;
         }
-        gameState.characterBank.add(char);
+        if (!isPunctuation(char)) gameState.characterBank.add(char);
     }
 
     // 更新界面
@@ -158,6 +164,8 @@ function addChatMessage(content, isUser = false) {
         isUser: isUser,
         timestamp: new Date().toISOString()
     });
+
+    document.getElementById("chatCount").textContent = gameState.chatHistory.length / 2 - gameState.chatHistory.length / 2 % 1
 }
 
 // 清空聊天记录
@@ -202,7 +210,7 @@ function removeLoadingMessage() {
 function validateInput(text) {
     let ret = new Set();
     for (let char of text) {
-        if (!gameState.characterBank.has(char)) {
+        if (!gameState.characterBank.has(char) && !isPunctuation(char)) {
             ret.add(char);
         }
     }
@@ -280,7 +288,7 @@ async function callAI(question) {
                 }
             ],
             max_tokens: 100,
-            temperature: 0.7
+            temperature: gameState.modelTemperature
         })
     });
 
@@ -295,10 +303,10 @@ async function callAI(question) {
 // 将回复添加到字库
 function addResponseToBank(response) {
     for (let char of response) {
-        if (gameState.disableEnglish && !isChinese(char)) {
+        if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
             continue;
         }
-        gameState.characterBank.add(char);
+        if (!isPunctuation(char)) gameState.characterBank.add(char);
     }
 }
 
@@ -365,6 +373,7 @@ function saveSettings() {
     gameState.apiKey = document.getElementById('apiKey').value.trim();
     gameState.modelName = document.getElementById('modelName').value.trim();
     gameState.initPrompt = document.getElementById('initPrompt').value.trim();
+    gameState.modelTemperature = parseFloat(document.getElementById('modelTemperature').value);
 
     // 保存到localStorage
     localStorage.setItem('gameSettings', JSON.stringify({
@@ -372,6 +381,7 @@ function saveSettings() {
         apiUrl: gameState.apiUrl,
         apiKey: gameState.apiKey,
         modelName: gameState.modelName,
+        modelTemperature: gameState.modelTemperature,
         initPrompt: gameState.initPrompt
     }));
 
@@ -388,6 +398,7 @@ function loadSettings() {
         gameState.apiUrl = settings.apiUrl || 'https://api.siliconflow.cn/v1/chat/completions';
         gameState.apiKey = settings.apiKey || '';
         gameState.modelName = settings.modelName || 'deepseek-ai/DeepSeek-V3';
+        gameState.modelTemperature = settings.modelTemperature || 0.7;
         gameState.initPrompt = settings.initPrompt || '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
 
         // 更新界面
@@ -395,7 +406,14 @@ function loadSettings() {
         document.getElementById('apiUrl').value = gameState.apiUrl;
         document.getElementById('apiKey').value = gameState.apiKey;
         document.getElementById('modelName').value = gameState.modelName;
+        document.getElementById('modelTemperature').value = gameState.modelTemperature;
         document.getElementById('initPrompt').value = gameState.initPrompt;
+
+        document.getElementById('modelTemperatureValue').textContent = gameState.modelTemperature;
+        document.getElementById('modelTemperature').removeEventListener('input', null);
+        document.getElementById('modelTemperature').addEventListener('input', function () {
+            document.getElementById('modelTemperatureValue').textContent = this.value;
+        });
     }
 }
 
@@ -422,14 +440,14 @@ function copyBank() {
 }
 
 function pasteBank() {
-    const inBank = navigator.clipboard.readText().then(text => {
+    navigator.clipboard.readText().then(text => {
         const chars = new Set(text.trim().split(''));
         gameState.characterBank = new Set();
         for (let char of chars) {
-            if (gameState.disableEnglish && !isChinese(char)) {
+            if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
                 continue;
             }
-            gameState.characterBank.add(char);
+            if (!isPunctuation(char)) gameState.characterBank.add(char);
         }
         updateCharacterGrid();
         showToast('字库已粘贴', '#2ecc71');
@@ -459,12 +477,8 @@ const Confettiful = function (el) {
 
 Confettiful.prototype._setupElements = function () {
     const containerEl = document.createElement('div');
-    const elPosition = this.el.style.position;
-
     containerEl.classList.add('confetti-container');
-
     this.el.appendChild(containerEl);
-
     this.containerEl = containerEl;
 };
 
