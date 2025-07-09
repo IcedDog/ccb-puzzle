@@ -32,8 +32,8 @@ function detectUrlParams() {
     const target = urlParams.get('target');
     const bank = urlParams.get('bank');
     document.getElementById('initialChars').value = bank ? bank : '';
-    document.getElementById('targetWord').value = target? target : '';
-    if (bank !== '' && targetWord !== '' && gameState.apiKey !== '') {
+    document.getElementById('targetWord').value = target ? target : '';
+    if (bank !== null && targetWord !== null && gameState.apiKey !== '') {
         startGame();
     }
 }
