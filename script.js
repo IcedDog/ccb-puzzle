@@ -24,6 +24,18 @@ function init() {
     updateCharacterGrid();
     setupInputValidation();
     if (!window.urlParamsLoaded) detectUrlParams();
+
+    if (window.isChallenge) {
+        fetch('https://gist.githubusercontent.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/9595f1d07a0df1ee78d0e770409c7dff4404d6a9/daily-challenge.json')
+            .then(response => response.json())
+            .then(data => {
+                date = data.date;
+                document.getElementById('initialChars').value = data.bank;
+                document.getElementById('targetWord').value = data.goal;
+            }).catch(error => {
+                showToast('无法获取每日挑战：' + error, '#e74c3c');
+            });
+    }
 }
 
 function detectUrlParams() {
@@ -529,7 +541,7 @@ function shareResult() {
 尝试一下 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle?target=${gameState.targetWord}&bank=${gameState.initBank}`);
 
     if (window.isChallenge) {
-        shareText = `我在今日的词出变挑战内取得了成功！🎖️ ${new Date().toLocaleDateString()}
+        shareText = `我在今日的词出变挑战内取得了成功！🎖️ ${date}
 ⏰ 用时：${minutes} 分 ${seconds} 秒
 💬 对话次数：${moves}
 你也来试试吧 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle/challenge/`);
@@ -725,7 +737,7 @@ async function refreshLatestChat() {
     } catch (error) {
         removeLoadingMessage();
         showToast('刷新失败：' + error.message, '#e74c3c');
-        
+
         // Restore the previous AI response
         addChatMessage(gameState.chatHistory[gameState.chatHistory.length - 1].content, false);
     }

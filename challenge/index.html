@@ -165,22 +165,8 @@
 
     <div id="toast">Some text some message..</div>
     <script>
-        const date = '';
+        let date = '';
         window.isChallenge = true;
-
-        fetch('https://gist.githubusercontent.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/9595f1d07a0df1ee78d0e770409c7dff4404d6a9/daily-challenge.json', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.json())
-            .then(data => {
-                date = data.date;
-                document.getElementById('initialChars').value = bank;
-                document.getElementById('targetWord').value = goal;
-            }).catch(error => {
-                showToast('无法获取每日挑战：' + error, '#e74c3c');
-            });
     </script>
     <script src="../script.js"></script>
 </body>
