@@ -26,7 +26,7 @@ function init() {
     if (!window.urlParamsLoaded) detectUrlParams();
 
     if (window.isChallenge) {
-        fetch('https://gist.githubusercontent.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/9595f1d07a0df1ee78d0e770409c7dff4404d6a9/daily-challenge.json')
+        fetch('https://gist.githubusercontent.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/daily-challenge.json')
             .then(response => response.json())
             .then(data => {
                 date = data.date;
