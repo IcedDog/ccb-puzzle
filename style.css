@@ -110,6 +110,10 @@ body {
     transform: none;
 }
 
+.right {
+    margin-left: auto;
+}
+
 .btn-secondary {
     background: linear-gradient(45deg, #ff6b6b, #ee5a24);
 }
@@ -544,6 +548,7 @@ input[type="password"]:focus {
 /* Dark Mode Variables */
 [data-theme="dark"] {
     --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    --challenge-bg: linear-gradient(135deg, #29323c 0%, #485563 100%);
     --text-color: #eeeeee;
     --card-bg: #2d2d2d;
     --border-color: #404040;
@@ -567,6 +572,7 @@ input[type="password"]:focus {
 
 [data-theme="light"] {
     --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --challenge-bg: linear-gradient(135deg, #fda085 0%, #f6d365 100%);
     --text-color: #333333;
     --card-bg: #ffffff;
     --border-color: #e0e0e0;
@@ -592,6 +598,10 @@ input[type="password"]:focus {
 body {
     background: var(--bg-gradient);
     color: var(--text-color);
+}
+
+body.challenge {
+    background: var(--challenge-bg);
 }
 
 .main-content {
@@ -672,6 +682,14 @@ body {
     color: var(--text-color);
 }
 
+.modal-content p {
+    text-align: center;
+}
+
+.success-details {
+    margin-bottom: 20px;
+}
+
 /* Input styles */
 input[type="text"],
 input[type="password"] {
@@ -684,6 +702,12 @@ input[type="password"] {
 
 input::placeholder {
     color: var(--placeholder-color);
+}
+
+input[type="text"]:disabled {
+    background: var(--badge-color-hover);
+    color: var(--placeholder-color);
+    border-color: var(--border-color);
 }
 
 /* Enhanced Animations */

@@ -94,6 +94,7 @@ function startGame() {
     gameState.isGameActive = true;
     gameState.targetWord = targetWord;
     gameState.characterBank = new Set();
+    gameState.lastAddedChars = new Set();
     gameState.startTime = new Date();
     gameState.initBank = '';
 
@@ -333,8 +334,8 @@ function addResponseToBank(response) {
             continue;
         }
         if (!isPunctuation(char)) {
-            gameState.characterBank.add(char);
             if (!gameState.characterBank.has(char)) gameState.lastAddedChars.add(char);
+            gameState.characterBank.add(char);
         }
     }
 }
@@ -368,6 +369,7 @@ function showSuccess() {
 function resetGame() {
     gameState.isGameActive = false;
     gameState.characterBank = new Set();
+    gameState.lastAddedChars = new Set();
     gameState.targetWord = '';
     gameState.chatHistory = [];
 
@@ -437,6 +439,12 @@ function loadSettings() {
         gameState.modelName = settings.modelName || 'deepseek-ai/DeepSeek-V3';
         gameState.modelTemperature = settings.modelTemperature || 0.7;
         gameState.initPrompt = settings.initPrompt || '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
+
+        if (window.isChallenge) {
+            gameState.disableEnglish = true;
+            gameState.initPrompt = '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
+            gameState.modelTemperature = 0.7;
+        }
 
         // 更新界面
         document.getElementById('disableEnglish').checked = gameState.disableEnglish;
@@ -514,11 +522,18 @@ function shareResult() {
     const minutes = Math.floor(timeDiff / 60);
     const seconds = timeDiff % 60;
 
-    const shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！🥰
+    let shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！🥰
 ⏰ 用时：${minutes} 分 ${seconds} 秒
 💬 对话次数：${moves}
 🧐 初始字库：${gameState.initBank}
 尝试一下 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle?target=${gameState.targetWord}&bank=${gameState.initBank}`);
+
+    if (window.isChallenge) {
+        shareText = `我在今日的词出变挑战内取得了成功！🎖️ ${new Date().toLocaleDateString()}
+⏰ 用时：${minutes} 分 ${seconds} 秒
+💬 对话次数：${moves}
+你也来试试吧 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle/challenge/`);
+    }
 
     navigator.clipboard.writeText(shareText).then(() => {
         showToast('游戏记录已复制到剪贴板', '#2ecc71');
@@ -684,7 +699,7 @@ async function refreshLatestChat() {
     chatContainer.removeChild(chatContainer.lastChild);
 
     // Remove the last AI respoense from character bank
-    for (let item in gameState.lastAddedChars) {
+    for (let item of gameState.lastAddedChars) {
         gameState.characterBank.delete(item);
     }
 

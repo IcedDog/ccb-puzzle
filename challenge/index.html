@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词出变：今日挑战</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body class="challenge">
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🚨 词出变：今日挑战 🚨</h1>
+            <p class="subtitle">仅使用已出现的汉字与 AI 交流，尝试使 AI 提到目标词汇！</p>
+        </div>
+
+        <div class="main-content">
+            <div class="game-setup" id="gameSetup">
+                <div class="setup-row">
+                    <div class="setup-item">
+                        <label for="initialChars">初始字库：</label>
+                        <input type="text" id="initialChars" placeholder="输入初始可用字符" value="" disabled>
+                    </div>
+                    <div class="setup-item">
+                        <label for="targetWord">目标词：</label>
+                        <input type="text" id="targetWord" placeholder="输入目标词汇" value="" disabled>
+                    </div>
+                </div>
+                <div class="setup-row">
+                    <button class="btn" onclick="startGame()">开始游戏</button>
+                    <button class="btn btn-settings right" onclick="openSettings()">设置</button>
+                    <button class="btn btn-theme" onclick="toggleTheme()">切换主题</button>
+                </div>
+            </div>
+
+            <div class="game-area" id="gameArea">
+                <div class="game-status" id="gameStatus">
+                    <div class="target-badge">目标词：<span id="currentTarget"></span></div>
+                </div>
+
+                <div class="character-bank">
+                    <h3>
+                        可用字库 (<span id="charCount">0</span> 个字符)
+                        <button class="character-bank-btn" onclick="copyBank()">复制字库</button>
+                    </h3>
+                    <div class="character-grid" id="characterGrid"></div>
+                </div>
+
+                <div class="input-area">
+                    <label for="userInput">输入提问内容：</label>
+                    <div class="input-container">
+                        <input type="text" id="userInput" placeholder="使用字库中的字符进行提问">
+                        <button class="btn" onclick="submitQuestion()" id="submitBtn">提交</button>
+                        <button class="btn btn-secondary" onclick="clearInput()">清空</button>
+                    </div>
+                    <div class="input-warning" id="inputWarning">包含非法字符，无法发送：</div>
+                </div>
+
+                <div class="chat-history">
+                    <h3>
+                        聊天记录 (<span id="chatCount">0</span> 次对话)
+                        <button class="character-bank-btn" onclick="exportChat()">导出聊天</button>
+                        <button class="refresh-btn right" onclick="refreshLatestChat()" title="刷新上一条对话"></button>
+                    </h3>
+                    <div class="chat-container" id="chatContainer">
+                        <div class="chat-placeholder">开始提问来查看聊天记录...</div>
+                    </div>
+                </div>
+
+                <div class="setup-row">
+                    <button class="btn btn-secondary" onclick="resetGame()">重新开始</button>
+                    <button class="btn btn-settings" onclick="openSettings()">设置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-modal" id="settingsModal">
+            <div class="settings-content">
+                <h2 style="margin-bottom: 20px;">游戏设置</h2>
+
+                <div class="settings-item">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="disableEnglish" checked disabled>
+                        <label for="disableEnglish">禁用非中文字符</label>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label for="apiUrl">API 地址：</label>
+                    <input type="text" id="apiUrl" placeholder="https://api.siliconflow.cn/v1/chat/completions"
+                        value="https://api.siliconflow.cn/v1/chat/completions">
+                </div>
+
+                <div class="settings-item">
+                    <label for="apiKey">API 密钥：</label>
+                    <input type="password" id="apiKey" placeholder="sk-...">
+                </div>
+
+                <div class="settings-item">
+                    <label for="modelName">模型名称：</label>
+                    <input type="text" id="modelName" placeholder="deepseek-ai/DeepSeek-V3"
+                        value="deepseek-ai/DeepSeek-V3">
+                </div>
+
+                <div class="settings-item">
+                    <label for="modelName">模型温度：</label>
+                    <div class="slider-item">
+                        <input type="range" id="modelTemperature" min="0.1" max="1.0" step="0.1" value="0.7" disabled>
+                        <div class="slider-value" id="modelTemperatureValue">0.7</div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label for="initPrompt">AI 提示词：</label>
+                    <input type="text" id="initPrompt"
+                        placeholder="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。"
+                        value="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。" disabled>
+                </div>
+
+                <div class="guide">
+                    <h4>快速获取 API</h4>
+                    <ul>
+                        <li>1. 访问 <a href="https://cloud.siliconflow.cn"
+                                target="_blank">https://cloud.siliconflow.cn</a></li>
+                        <li>2. 注册账号并完成实名认证</li>
+                        <li>3. 在控制台中创建 API 密钥</li>
+                        <li>4. 选择合适的模型（推荐：<code>deepseek-ai/DeepSeek-V3</code>）</li>
+                        <li>5. 购买足够的 token 用量（注册会赠送）</li>
+                        <li>6. 将 API 密钥填入上方设置中</li>
+                    </ul>
+                </div>
+
+                <div class="setup-row">
+                    <button class="btn" onclick="saveSettings()">保存设置</button>
+                    <button class="btn btn-secondary" onclick="closeSettings()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <!-- Success Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content">
+                <h2>🎉 今日挑战成功！</h2>
+                <div id="successModalDescription" class="success-details">
+                    <p style="display: none;">目标词：<span id="successTarget"></span></p>
+                    <p>用时：<span id="successTime"></span></p>
+                    <p>对话次数：<span id="successMoves"></span></p>
+                </div>
+                <div class="share-area">
+                    <button class="btn btn-settings" onclick="shareResult()">分享结果</button>
+                    <div class="share-text" id="shareText"></div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn" onclick="resetGame()">再玩一次</button>
+                    <button class="btn btn-secondary" onclick="closeSuccessModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="js-container"></div>
+
+    <div id="toast">Some text some message..</div>
+    <script>
+        const date = '';
+        window.isChallenge = true;
+
+        fetch('https://gist.github.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/daily-challenge.json', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                date = data.date;
+                document.getElementById('initialChars').value = bank;
+                document.getElementById('targetWord').value = goal;
+            }).catch(error => {
+                showToast('无法获取每日挑战：' + error, '#e74c3c');
+            });
+    </script>
+    <script src="../script.js"></script>
+</body>
+
+</html>
