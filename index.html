@@ -89,14 +89,35 @@
                 </div>
 
                 <div class="settings-item">
-                    <label for="apiUrl">API 地址：</label>
-                    <input type="text" id="apiUrl" placeholder="https://api.siliconflow.cn/v1/chat/completions"
-                        value="https://api.siliconflow.cn/v1/chat/completions">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useCustomApi" checked>
+                        <label for="useCustomApi">使用自定义 API</label>
+                    </div>
                 </div>
-
-                <div class="settings-item">
-                    <label for="apiKey">API 密钥：</label>
-                    <input type="password" id="apiKey" placeholder="sk-...">
+                
+                <div id="settings-api-item">
+                    <div class="settings-item">
+                        <label for="apiUrl">API 地址：</label>
+                        <input type="text" id="apiUrl" placeholder="https://api.siliconflow.cn/v1/chat/completions"
+                            value="https://api.siliconflow.cn/v1/chat/completions">
+                    </div>
+                
+                    <div class="settings-item">
+                        <label for="apiKey">API 密钥：</label>
+                        <input type="password" id="apiKey" placeholder="sk-...">
+                    </div>
+                    
+                    <div class="guide">
+                        <h4>快速获取 API</h4>
+                        <ul>
+                            <li>1. 访问 <a href="https://cloud.siliconflow.cn" target="_blank">https://cloud.siliconflow.cn</a></li>
+                            <li>2. 注册账号并完成实名认证</li>
+                            <li>3. 在控制台中创建 API 密钥</li>
+                            <li>4. 选择合适的模型（推荐：<code>deepseek-ai/DeepSeek-V3</code>）</li>
+                            <li>5. 购买足够的 token 用量（注册会赠送）</li>
+                            <li>6. 将 API 密钥填入上方设置中</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="settings-item">
@@ -118,19 +139,6 @@
                     <input type="text" id="initPrompt"
                         placeholder="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。"
                         value="请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。">
-                </div>
-
-                <div class="guide">
-                    <h4>快速获取 API</h4>
-                    <ul>
-                        <li>1. 访问 <a href="https://cloud.siliconflow.cn"
-                                target="_blank">https://cloud.siliconflow.cn</a></li>
-                        <li>2. 注册账号并完成实名认证</li>
-                        <li>3. 在控制台中创建 API 密钥</li>
-                        <li>4. 选择合适的模型（推荐：<code>deepseek-ai/DeepSeek-V3</code>）</li>
-                        <li>5. 购买足够的 token 用量（注册会赠送）</li>
-                        <li>6. 将 API 密钥填入上方设置中</li>
-                    </ul>
                 </div>
 
                 <div class="setup-row">
@@ -166,6 +174,11 @@
     <div class="js-container"></div>
 
     <div id="toast">Some text some message..</div>
+    
+    <footer style="text-align: center; padding: 20px; color: white;">
+        <p>Made with ❤️ by <a href="https://github.com/IcedDog" style="color: white; text-decoration: none;">IcedDog</a></p>
+        <p>© 2024 词出变. All rights reserved.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

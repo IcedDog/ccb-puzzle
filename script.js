@@ -1,6 +1,7 @@
 // 游戏状态
 let gameState = {
     isGameActive: false,
+    useCustomApi: false,
     characterBank: new Set(),
     lastAddedChars: new Set(),
     targetWord: '',
@@ -23,9 +24,10 @@ function init() {
     loadSettings();
     updateCharacterGrid();
     setupInputValidation();
+    setupCustomApiToggle();
     if (!window.urlParamsLoaded) detectUrlParams();
 
-    if (window.isChallenge) {
+    if (window.isChallenge) {        
         fetch('https://gist.githubusercontent.com/IcedDog/3daa85b4aba423386504b7ad072b59d6/raw/daily-challenge.json')
             .then(response => response.json())
             .then(data => {
@@ -38,6 +40,10 @@ function init() {
     }
 }
 
+function apiAvailable() {
+    return (gameState.useCustomApi && gameState.apiKey!== '') || !gameState.useCustomApi;
+}
+
 function detectUrlParams() {
     window.urlParamsLoaded = true;
     const urlParams = new URLSearchParams(window.location.search);
@@ -45,7 +51,7 @@ function detectUrlParams() {
     const bank = urlParams.get('bank');
     document.getElementById('initialChars').value = bank ? bank : '';
     document.getElementById('targetWord').value = target ? target : '';
-    if (bank !== null && targetWord !== null && gameState.apiKey !== '') {
+    if (bank !== null && targetWord !== null && apiAvailable()) {
         startGame();
     }
 }
@@ -96,7 +102,7 @@ function startGame() {
         return;
     }
 
-    if (!gameState.apiKey) {
+    if (!apiAvailable()) {
         showToast('请先在设置中配置API密钥', "#e74c3c");
         openSettings();
         return;
@@ -311,12 +317,20 @@ async function submitQuestion() {
 
 // 调用AI API
 async function callAI(question) {
-    const response = await fetch(gameState.apiUrl, {
-        method: 'POST',
-        headers: {
+    const apiEndpoint = gameState.useCustomApi ? gameState.apiUrl : 'https://puzzle-api.iceddog.top/';
+
+    let headers = {};
+
+    if (gameState.useCustomApi) {
+        headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${gameState.apiKey}`
-        },
+        };
+    }
+
+    const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: headers,
         body: JSON.stringify({
             model: gameState.modelName,
             messages: [
@@ -419,6 +433,7 @@ function closeSettings() {
 
 // 保存设置
 function saveSettings() {
+    gameState.useCustomApi = document.getElementById('useCustomApi').checked;
     gameState.disableEnglish = document.getElementById('disableEnglish').checked;
     gameState.apiUrl = document.getElementById('apiUrl').value.trim();
     gameState.apiKey = document.getElementById('apiKey').value.trim();
@@ -426,8 +441,8 @@ function saveSettings() {
     gameState.initPrompt = document.getElementById('initPrompt').value.trim();
     gameState.modelTemperature = parseFloat(document.getElementById('modelTemperature').value);
 
-    // 保存到localStorage
     localStorage.setItem('gameSettings', JSON.stringify({
+        useCustomApi: gameState.useCustomApi,
         disableEnglish: gameState.disableEnglish,
         apiUrl: gameState.apiUrl,
         apiKey: gameState.apiKey,
@@ -445,6 +460,7 @@ function loadSettings() {
     const saved = localStorage.getItem('gameSettings');
     if (saved) {
         const settings = JSON.parse(saved);
+        gameState.useCustomApi = settings.useCustomApi ?? false;
         gameState.disableEnglish = settings.disableEnglish ?? true;
         gameState.apiUrl = settings.apiUrl || 'https://api.siliconflow.cn/v1/chat/completions';
         gameState.apiKey = settings.apiKey || '';
@@ -453,12 +469,14 @@ function loadSettings() {
         gameState.initPrompt = settings.initPrompt || '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
 
         if (window.isChallenge) {
+            gameState.useCustomApi = false;
             gameState.disableEnglish = true;
             gameState.initPrompt = '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
             gameState.modelTemperature = 0.7;
         }
 
-        // 更新界面
+        // Update UI
+        document.getElementById('useCustomApi').checked = gameState.useCustomApi;
         document.getElementById('disableEnglish').checked = gameState.disableEnglish;
         document.getElementById('apiUrl').value = gameState.apiUrl;
         document.getElementById('apiKey').value = gameState.apiKey;
@@ -471,9 +489,19 @@ function loadSettings() {
         document.getElementById('modelTemperature').addEventListener('input', function () {
             document.getElementById('modelTemperatureValue').textContent = this.value;
         });
+        document.getElementById('settings-api-item').style.display = this.checked ? 'block' : 'none';
     }
 
     initTheme();
+}
+
+// Add event listener for custom API checkbox
+function setupCustomApiToggle() {
+    const checkbox = document.getElementById('useCustomApi');
+    
+    checkbox.addEventListener('change', function() {
+        document.getElementById('settings-api-item').style.display = this.checked ? 'block' : 'none';
+    });
 }
 
 // 切换主题
@@ -481,13 +509,6 @@ function toggleTheme() {
     gameState.theme = gameState.theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', gameState.theme);
     localStorage.setItem('theme', gameState.theme);
-
-    // Force re-render of inputs to update their styles
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.style.display = 'none';
-        setTimeout(() => input.style.display = '', 0);
-    });
 }
 
 // 初始化主题
@@ -538,13 +559,13 @@ function shareResult() {
 ⏰ 用时：${minutes} 分 ${seconds} 秒
 💬 对话次数：${moves}
 🧐 初始字库：${gameState.initBank}
-尝试一下 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle?target=${gameState.targetWord}&bank=${gameState.initBank}`);
+尝试一下 👉 ` + encodeURI(`https://puzzle.iceddog.top?target=${gameState.targetWord}&bank=${gameState.initBank}`);
 
     if (window.isChallenge) {
         shareText = `我在今日的词出变挑战内取得了成功！🎖️ ${date}
 ⏰ 用时：${minutes} 分 ${seconds} 秒
 💬 对话次数：${moves}
-你也来试试吧 👉 ` + encodeURI(`https://iceddog.github.io/ccb-puzzle/challenge/`);
+你也来试试吧 👉 ` + encodeURI(`https://puzzle.iceddog.top/challenge/`);
     }
 
     navigator.clipboard.writeText(shareText).then(() => {

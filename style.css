@@ -361,12 +361,18 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
 
 .settings-modal.active {
     display: flex;
     align-items: center;
     justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
 }
 
 .settings-content {
@@ -380,6 +386,11 @@ body {
 
     scrollbar-width: thin;
     scrollbar-color: #0000 #0000;
+    animation: fadeOut 0.5s ease forwards;
+}
+
+.settings-modal.active .settings-content {
+    animation: fadeIn 0.5s ease forwards;
 }
 
 .settings-content::-webkit-scrollbar {
@@ -388,6 +399,7 @@ body {
 
 .settings-item {
     margin-bottom: 20px;
+    animation: fadeIn 0.1s ease;
 }
 
 .settings-item input[type="text"],
@@ -506,6 +518,21 @@ input[type="password"]:focus {
     text-decoration: none;
 }
 
+footer a:hover {
+    text-decoration: underline !important;
+}
+
+footer {
+    margin-top: 20px;
+    font-size: 14px;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+footer:hover {
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
     .setup-row {
         flex-direction: column;
@@ -542,6 +569,11 @@ input[type="password"]:focus {
     .modal-content {
         padding: 20px;
         margin: 10px;
+    }
+
+    footer {
+        font-size: 12px;
+        padding: 10px !important;
     }
 }
 
