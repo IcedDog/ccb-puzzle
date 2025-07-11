@@ -6,6 +6,7 @@ let gameState = {
     lastAddedChars: new Set(),
     targetWord: '',
     disableEnglish: true,
+    hardMode: false,
     apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
     apiKey: '',
     modelName: 'deepseek-ai/DeepSeek-V3',
@@ -67,6 +68,11 @@ function isPunctuation(char) {
     return punctuationRegex.test(char);
 }
 
+function isHardPunctuation(char) { 
+    const hardPunctuationRegex = /[？！、：；，。（）《》【】]/;
+    return hardPunctuationRegex.test(char);
+}
+
 // 设置输入验证
 function setupInputValidation() {
     const input = document.getElementById('userInput');
@@ -90,6 +96,10 @@ function setupInputValidation() {
             submitBtn.disabled = false;
         }
     });
+}
+
+function difficultyCheck(char) { 
+    return (gameState.hardMode && !isHardPunctuation(char)) || (!gameState.hardMode && !isPunctuation(char));
 }
 
 // 开始游戏
@@ -118,10 +128,10 @@ function startGame() {
 
     // 添加初始字符到字库
     for (let char of initialChars) {
-        if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
+        if (gameState.disableEnglish && !isChinese(char) && difficultyCheck(char)) {
             continue;
         }
-        if (!isPunctuation(char)) {
+        if (!isPunctuation(char) || gameState.hardMode) {
             gameState.characterBank.add(char);
             gameState.initBank += char;
         }
@@ -253,7 +263,7 @@ function removeLoadingMessage() {
 function validateInput(text) {
     let ret = new Set();
     for (let char of text) {
-        if (!gameState.characterBank.has(char) && !isPunctuation(char)) {
+        if (!gameState.characterBank.has(char) && (gameState.hardMode || !isPunctuation(char))) {
             ret.add(char);
         }
     }
@@ -356,10 +366,10 @@ async function callAI(question) {
 function addResponseToBank(response) {
     gameState.lastAddedChars = new Set();
     for (let char of response) {
-        if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
+        if (gameState.disableEnglish && !isChinese(char) && difficultyCheck(char)) {
             continue;
         }
-        if (!isPunctuation(char)) {
+        if (!isPunctuation(char) || gameState.hardMode) {
             if (!gameState.characterBank.has(char)) gameState.lastAddedChars.add(char);
             gameState.characterBank.add(char);
         }
@@ -435,6 +445,7 @@ function closeSettings() {
 function saveSettings() {
     gameState.useCustomApi = document.getElementById('useCustomApi').checked;
     gameState.disableEnglish = document.getElementById('disableEnglish').checked;
+    gameState.hardMode = document.getElementById('hardMode').checked;
     gameState.apiUrl = document.getElementById('apiUrl').value.trim();
     gameState.apiKey = document.getElementById('apiKey').value.trim();
     gameState.modelName = document.getElementById('modelName').value.trim();
@@ -462,6 +473,7 @@ function loadSettings() {
         const settings = JSON.parse(saved);
         gameState.useCustomApi = settings.useCustomApi ?? false;
         gameState.disableEnglish = settings.disableEnglish ?? true;
+        gameState.hardMode = settings.hardMode ?? false;
         gameState.apiUrl = settings.apiUrl || 'https://api.siliconflow.cn/v1/chat/completions';
         gameState.apiKey = settings.apiKey || '';
         gameState.modelName = settings.modelName || 'deepseek-ai/DeepSeek-V3';
@@ -478,6 +490,7 @@ function loadSettings() {
         // Update UI
         document.getElementById('useCustomApi').checked = gameState.useCustomApi;
         document.getElementById('disableEnglish').checked = gameState.disableEnglish;
+        document.getElementById('hardMode').checked = gameState.hardMode;
         document.getElementById('apiUrl').value = gameState.apiUrl;
         document.getElementById('apiKey').value = gameState.apiKey;
         document.getElementById('modelName').value = gameState.modelName;
@@ -555,15 +568,17 @@ function shareResult() {
     const minutes = Math.floor(timeDiff / 60);
     const seconds = timeDiff % 60;
 
+    const modeText = gameState.hardMode ? '（困难模式）' : !gameState.disableEnglish ? '（未禁用英文）' : '';
+
     let shareText = `我在词出变游戏中找到了"${gameState.targetWord}"！🥰
-⏰ 用时：${minutes} 分 ${seconds} 秒
+⏰ 用时：${minutes} 分 ${seconds} 秒${modeText}
 💬 对话次数：${moves}
 🧐 初始字库：${gameState.initBank}
 尝试一下 👉 ` + encodeURI(`https://puzzle.iceddog.top?target=${gameState.targetWord}&bank=${gameState.initBank}`);
 
     if (window.isChallenge) {
         shareText = `我在今日的词出变挑战内取得了成功！🎖️ ${date}
-⏰ 用时：${minutes} 分 ${seconds} 秒
+⏰ 用时：${minutes} 分 ${seconds} 秒${modeText}
 💬 对话次数：${moves}
 你也来试试吧 👉 ` + encodeURI(`https://puzzle.iceddog.top/challenge/`);
     }
@@ -602,10 +617,10 @@ function pasteBank() {
         const chars = new Set(text.trim().split(''));
         gameState.characterBank = new Set();
         for (let char of chars) {
-            if (gameState.disableEnglish && !isChinese(char) && !isPunctuation(char)) {
+            if (gameState.disableEnglish && !isChinese(char) && difficultyCheck(char)) {
                 continue;
             }
-            if (!isPunctuation(char)) gameState.characterBank.add(char);
+            if (!isPunctuation(char) || gameState.hardMode) gameState.characterBank.add(char);
         }
         updateCharacterGrid();
         showToast('字库已粘贴', '#2ecc71');
