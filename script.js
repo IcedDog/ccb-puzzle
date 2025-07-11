@@ -489,7 +489,7 @@ function loadSettings() {
         document.getElementById('modelTemperature').addEventListener('input', function () {
             document.getElementById('modelTemperatureValue').textContent = this.value;
         });
-        document.getElementById('settings-api-item').style.display = this.checked ? 'block' : 'none';
+        document.getElementById('settings-api-item').style.display = gameState.useCustomApi ? 'block' : 'none';
     }
 
     initTheme();
