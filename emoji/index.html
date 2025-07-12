@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💬🧩🎯</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        button.btn,
+        button.btn-secondary,
+        button.btn-settings {
+            background: var(--card-bg) !important;
+            border: 2px solid var(--border-color) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">💬🧩🎯</h1>
+            <p class="subtitle">📛🈶️😃💬🤖，🎯🤖📣🎯😃！</p>
+        </div>
+
+        <div class="main-content">
+            <div class="game-setup" id="gameSetup">
+                <div class="setup-row">
+                    <div class="setup-item">
+                        <label for="initialChars">🏁：</label>
+                        <input type="text" id="initialChars" placeholder="..." value="">
+                    </div>
+                    <div class="setup-item">
+                        <label for="targetWord">🎯：</label>
+                        <input type="text" id="targetWord" placeholder="..." value="">
+                    </div>
+                </div>
+                <div class="setup-row">
+                    <button class="btn" onclick="startGame()">🎮</button>
+                    <button class=" btn btn-settings right" onclick="openSettings()">⚙️</button>
+                    <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+                </div>
+            </div>
+
+            <div class="game-area" id="gameArea">
+                <div class="game-status" id="gameStatus">
+                    <div class="target-badge">🎯：<span id="currentTarget"></span></div>
+                </div>
+
+                <div class="character-bank">
+                    <h3>
+                        🧱 (<span id="charCount">0</span>)
+                        <button class="character-bank-btn" onclick="copyBank()">📋</button>
+                        <button class="character-bank-btn" onclick="pasteBank()">📥</button>
+                    </h3>
+                    <div class="character-grid" id="characterGrid"></div>
+                </div>
+
+                <div class="input-area">
+                    <label for="userInput">💬：</label>
+                    <div class="input-container">
+                        <input type="text" id="userInput" placeholder="...">
+                        <button class="btn" onclick="submitQuestion()" id="submitBtn">📨</button>
+                        <button class="btn btn-secondary" onclick="clearInput()">🧹</button>
+                    </div>
+                    <div class="input-warning" id="inputWarning">🚫💬😃，❌：</div>
+                </div>
+
+                <div class="chat-history">
+                    <h3>
+                        🧾 (<span id="chatCount">0</span>)
+                        <button class="character-bank-btn" onclick="exportChat()">⏏️</button>
+                        <button class="refresh-btn right" onclick="refreshLatestChat()" title="🔄"></button>
+                    </h3>
+                    <div class="chat-container" id="chatContainer">
+                        <div class="chat-placeholder">💬🈶️🧾...</div>
+                    </div>
+                </div>
+
+                <div class="setup-row">
+                    <button class="btn btn-secondary" onclick="resetGame()">🔁</button>
+                    <button class="btn btn-settings" onclick="openSettings()">⚙️</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-modal" id="settingsModal">
+            <div class="settings-content">
+                <h2 style="margin-bottom: 20px;">⚙️</h2>
+
+                <div class="settings-item">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="disableEnglish" checked>
+                        <label for="disableEnglish">🚫🔤</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="hardMode">
+                        <label for="hardMode">💀</label>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useCustomApi" checked>
+                        <label for="useCustomApi">🧰🔑</label>
+                    </div>
+                </div>
+
+                <div id="settings-api-item">
+                    <div class="settings-item">
+                        <label for="apiUrl">🔗：</label>
+                        <input type="text" id="apiUrl" placeholder="https://api.siliconflow.cn/v1/chat/completions"
+                            value="https://api.siliconflow.cn/v1/chat/completions">
+                    </div>
+
+                    <div class="settings-item">
+                        <label for="apiKey">🔐：</label>
+                        <input type="password" id="apiKey" placeholder="sk-...">
+                    </div>
+
+                    <div class="guide">
+                        <h4>⚡️🔐</h4>
+                        <ul>
+                            <li>1️⃣ 👉<a href="https://cloud.siliconflow.cn" target="_blank">🔗</a></li>
+                            <li>2️⃣ 👤✅</li>
+                            <li>3️⃣ 🔑➕</li>
+                            <li>4️⃣ 🧠➡️ <code>deepseek-ai/DeepSeek-V3</code></li>
+                            <li>5️⃣ 💰📦</li>
+                            <li>6️⃣ ✍️🔐</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label for="modelName">🧠：</label>
+                    <input type="text" id="modelName" placeholder="deepseek-ai/DeepSeek-V3"
+                        value="deepseek-ai/DeepSeek-V3">
+                </div>
+
+                <div class="settings-item">
+                    <label for="modelName">🌡️：</label>
+                    <div class="slider-item">
+                        <input type="range" id="modelTemperature" min="0.1" max="1.0" step="0.1" value="0.7">
+                        <div class="slider-value" id="modelTemperatureValue">0.7</div>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label for="initPrompt">💡：</label>
+                    <input type="text" id="initPrompt"
+                        placeholder="请使用表情符号回应方括号中的内容。如果是名词，使用表情符号给出简要解释。如果是提问，使用表情符号直接给出回答。如果是命令，可以使用表情符号执行。你只能使用表情符号。"
+                        value="请使用表情符号回应方括号中的内容。如果是名词，使用表情符号给出简要解释。如果是提问，使用表情符号直接给出回答。如果是命令，可以使用表情符号执行。你只能使用表情符号。" disabled>
+                </div>
+
+                <div class="setup-row">
+                    <button class="btn" onclick="saveSettings()">✅</button>
+                    <button class="btn btn-secondary" onclick="closeSettings()">❌</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <!-- Success Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content">
+                <h2>🎉🎉🎉</h2>
+                <div id="successModalDescription" class="success-details">
+                    <p>🎯：<span id="successTarget"></span></p>
+                    <p>⏱️：<span id="successTime"></span></p>
+                    <p>💬：<span id="successMoves"></span></p>
+                </div>
+                <div class="share-area">
+                    <button class="btn btn-settings" onclick="shareResult()">📤</button>
+                    <div class="share-text" id="shareText"></div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn" onclick="resetGame()">🔁</button>
+                    <button class="btn btn-secondary" onclick="closeSuccessModal()">❌</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="js-container"></div>
+
+    <div id="toast">Some text some message..</div>
+
+    <footer style="text-align: center; padding: 20px; color: white;">
+        <p>❓👉<a href="https://github.com/iceddog/ccb-puzzle/issues" style="color: white; text-decoration: none;">🐞</a>
+        <p>❤️❤️❤️ <a href="https://space.bilibili.com/357428794" style="color: white; text-decoration: none;">🧊🐶</a>
+            ❤️❤️❤️</p>
+        <p>（此版本bug较多，不提供支持）</p>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script> window.isEmoji = true; </script>
+    <script>
+        isChinese = function (char) {
+            return /^\p{RGI_Emoji}$/v.test(char);
+        }
+        isPunctuation = function (char) {
+            const punctuationRegex = /[？?！!、：；，,。.（）()《》【】[\]_=+\-\*/]/;
+            return punctuationRegex.test(char);
+        }
+        clearChatHistory = function () {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '<div class="chat-placeholder">🈶️💬📜...</div>';
+            gameState.chatHistory = [];
+        }
+        shareResult = function () {
+            const moves = gameState.chatHistory.length / 2;
+            const timeDiff = Math.floor((new Date() - gameState.startTime) / 1000);
+            const minutes = Math.floor(timeDiff / 60);
+            const seconds = timeDiff % 60;
+
+            const modeText = gameState.hardMode ? '（💀）' : !gameState.disableEnglish ? '（🚫🔤）' : '';
+
+            let shareText = `我在💬🧩🎯游戏中找到了"${gameState.targetWord}"！🥰
+⏰🎯：${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}${modeText}
+💬🤖：${moves}
+🧐🧱：${gameState.initBank}
+🎮👉 ` + encodeURI(`https://puzzle.iceddog.top/emoji?target=${gameState.targetWord}&bank=${gameState.initBank}`);
+
+            navigator.clipboard.writeText(shareText).then(() => {
+                showToast('游戏记录已复制到剪贴板', '#2ecc71');
+            }).catch(err => {
+                showToast('复制失败: ' + err, '#e74c3c');
+            });
+        }
+    </script>
+</body>
+
+</html>

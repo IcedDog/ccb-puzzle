@@ -88,7 +88,7 @@ function setupInputValidation() {
         if (text && isValid !== "") {
             this.classList.add('invalid');
             warning.classList.add('show');
-            warning.textContent = `包含非法字符，无法发送：${isValid}`;
+            warning.textContent = window.isEmoji ? `🚫🈶️❌：${isValid}` : `包含非法字符，无法发送：${isValid}`;
             submitBtn.disabled = true;
         } else {
             this.classList.remove('invalid');
@@ -224,7 +224,7 @@ function addChatMessage(content, isUser = false) {
 // 清空聊天记录
 function clearChatHistory() {
     const chatContainer = document.getElementById('chatContainer');
-    chatContainer.innerHTML = '<div class="chat-placeholder">开始提问来查看聊天记录...</div>';
+    chatContainer.innerHTML = window.isEmoji ? '<div class="chat-placeholder">🈶️💬📜...</div>' : '<div class="chat-placeholder">开始提问来查看聊天记录...</div>';
     gameState.chatHistory = [];
 }
 
@@ -243,7 +243,7 @@ function showLoadingMessage() {
 
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
-    bubbleDiv.innerHTML = '<em>AI正在思考中...</em>';
+    bubbleDiv.innerHTML = window.isEmoji ? '<em>🤖💭...</em>' : '<em>AI正在思考中...</em>';
 
     loadingDiv.appendChild(bubbleDiv);
     chatContainer.appendChild(loadingDiv);
@@ -291,7 +291,7 @@ async function submitQuestion() {
     // 禁用提交按钮
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.textContent = '提交中...';
+    submitBtn.textContent = window.isEmoji ? '📨...' : '提交中...';
 
     // 显示加载消息
     showLoadingMessage();
@@ -321,7 +321,7 @@ async function submitQuestion() {
     } finally {
         // 恢复提交按钮
         submitBtn.disabled = false;
-        submitBtn.textContent = '提交';
+        submitBtn.textContent = window.isEmoji ? '📨' : '提交';
     }
 }
 
@@ -391,14 +391,14 @@ function showSuccess() {
     }
     const successMsg = document.createElement('div');
     successMsg.className = 'success-message';
-    successMsg.innerHTML = `🎉 恭喜！成功挑战完成！<br>AI 回复中包含了目标词"${gameState.targetWord}"`;
+    successMsg.innerHTML = window.isEmoji ? `🎉🎊！👉️🎯👈！<br>🤖📩🎯："${gameState.targetWord}"` : `🎉 恭喜！成功挑战完成！<br>AI 回复中包含了目标词"${gameState.targetWord}"`;
     gameArea.insertBefore(successMsg, gameArea.firstChild);
 
     spawnConfetti(3000);
 
     // 禁用提交按钮
     document.getElementById('submitBtn').disabled = true;
-    document.getElementById('submitBtn').textContent = '挑战已完成';
+    document.getElementById('submitBtn').textContent = window.isEmoji ? '✅🎯' : '挑战已完成';
 }
 
 // 重置游戏
@@ -428,7 +428,7 @@ function resetGame() {
     input.classList.remove('invalid');
     warning.classList.remove('show');
     submitBtn.disabled = false;
-    submitBtn.textContent = '提交';
+    submitBtn.textContent = window.isEmoji ? '📨' : '提交';
 }
 
 // 打开设置
@@ -485,6 +485,10 @@ function loadSettings() {
             gameState.disableEnglish = true;
             gameState.initPrompt = '请回应方括号中的内容，不超过20字。如果是名词，给出简要解释。如果是提问，直接给出回答，但注意不要超过20字。如果是命令，可以执行，但不得超过20字。';
             gameState.modelTemperature = 0.7;
+        }
+
+        if (window.isEmoji) {
+            gameState.initPrompt = '请使用表情符号回应方括号中的内容。如果是名词，使用表情符号给出简要解释。如果是提问，使用表情符号直接给出回答。如果是命令，可以使用表情符号执行。你只能使用表情符号。';
         }
 
         // Update UI
